@@ -1,12 +1,20 @@
 import { useEffect, useState } from "react";
-import { Route, Routes, Link, useNavigate } from "react-router-dom";
-import SignIn from "./pages/SignIn";
-import SignUp from "./pages/SignUp";
+import { Route, Routes, Link, useNavigate, Navigate } from "react-router-dom";
+
 import Home from "./pages/Home";
 import Admin from "./pages/Admin";
+import SignUp from "./pages/SignUp";
+import SignIn from "./pages/SignIn";
 
-const Navbar = ({ user, setUser }: { user: any; setUser: any }) => {
+const App = () => {
   const navigate = useNavigate();
+  const [user, setUser] = useState(
+    JSON.parse(localStorage.getItem("user") || "null")
+  );
+
+  useEffect(() => {
+    setUser(JSON.parse(localStorage.getItem("user") || "null"));
+  }, []);
 
   const handleSignOut = () => {
     localStorage.removeItem("user");
@@ -14,84 +22,80 @@ const Navbar = ({ user, setUser }: { user: any; setUser: any }) => {
     navigate("/sign-in");
   };
 
-  return (
-    <nav className="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
-      <div className="container">
-        <Link className="navbar-brand" to="/">
-          MyApp
-        </Link>
-        <button
-          className="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
-        >
-          <span className="navbar-toggler-icon"></span>
-        </button>
-        <div className="collapse navbar-collapse" id="navbarNav">
-          <ul className="navbar-nav ms-auto">
-            {user ? (
-              <button onClick={handleSignOut} className="btn btn-danger">
-                Sign Out
-              </button>
-            ) : (
-              <Link className="nav-link" to="/sign-in">
-                <button className="btn btn-success">Sign In</button>
-              </Link>
-            )}
-          </ul>
-        </div>
-      </div>
-    </nav>
-  );
-};
-
-const App = () => {
-  const [user, setUser] = useState<any>(null);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-  }, []);
-
-  useEffect(() => {
+  const ProtectedRoute = ({
+    children,
+    isAdmin = false,
+  }: {
+    children: JSX.Element;
+    isAdmin?: boolean;
+  }) => {
     if (!user) {
-      navigate("/sign-in");
+      return <Navigate to="/sign-in" />;
     }
-  }, [user, navigate]);
+    if (isAdmin && user.role !== "admin") {
+      return <Navigate to="/" />;
+    }
+    return children;
+  };
 
   return (
     <div>
-      <Navbar user={user} setUser={setUser} />
+      {/* Navbar */}
+      {user && (
+        <nav className="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+          <div className="container">
+            <Link className="navbar-brand" to="/">
+              MyApp
+            </Link>
+            <button
+              className="navbar-toggler"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#navbarNav"
+            >
+              <span className="navbar-toggler-icon"></span>
+            </button>
+            <div className="collapse navbar-collapse" id="navbarNav">
+              <ul className="navbar-nav ms-auto">
+                <li className="nav-item">
+                  {user ? (
+                    <button onClick={handleSignOut} className="btn btn-danger">
+                      Sign Out
+                    </button>
+                  ) : (
+                    <Link className="nav-link" to="/sign-in">
+                      <button className="btn btn-success">Sign In</button>
+                    </Link>
+                  )}
+                </li>
+              </ul>
+            </div>
+          </div>
+        </nav>
+      )}
+
+      {/* Routes */}
       <Routes>
-        <Route path="/sign-in" element={<SignIn />} />
+        <Route path="/sign-in" element={<SignIn setUser={setUser} />} />
         <Route path="/sign-up" element={<SignUp />} />
         <Route
           path="/"
           element={
-            user ? (
+            <ProtectedRoute>
               <Home />
-            ) : (
-              <h1 className="text-center mt-5 text-danger">Access Denied</h1>
-            )
+            </ProtectedRoute>
           }
         />
         <Route
           path="/admin"
           element={
-            user?.role === "admin" ? (
+            <ProtectedRoute isAdmin>
               <Admin />
-            ) : (
-              <h1 className="text-center mt-5 text-danger">Access Denied</h1>
-            )
+            </ProtectedRoute>
           }
         />
       </Routes>
     </div>
   );
 };
-
 export default App;
