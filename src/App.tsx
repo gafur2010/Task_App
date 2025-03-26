@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
-import { Route, Routes, Link, useNavigate, Navigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Route, Routes, Link, useNavigate } from "react-router-dom";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import Home from "./pages/Home";
 import Admin from "./pages/Admin";
 
-const Navbar = ({ user, setUser }: { user: string | null; setUser: any }) => {
+const Navbar = ({ user, setUser }) => {
   const navigate = useNavigate();
 
   const handleSignOut = () => {
@@ -48,18 +48,15 @@ const Navbar = ({ user, setUser }: { user: string | null; setUser: any }) => {
   );
 };
 
-const ProtectedAdmin = ({ user }: { user: string | null }) => {
-  if (user !== "k@gmail.com") {
-    return <Navigate to="/" replace />;
-  }
-  return <Admin />;
-};
-
 const App = () => {
-  const [user, setUser] = useState(localStorage.getItem("user"));
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    setUser(localStorage.getItem("user"));
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
   }, []);
 
   return (
@@ -68,8 +65,20 @@ const App = () => {
       <Routes>
         <Route path="/sign-in" element={<SignIn />} />
         <Route path="/sign-up" element={<SignUp />} />
-        <Route path="/" element={<Home />} />
-        <Route path="/admin" element={<ProtectedAdmin user={user} />} />
+        <Route
+          path="/"
+          element={user ? <Home /> : navigate("/sign-in") || null}
+        />
+        <Route
+          path="/admin"
+          element={
+            user && user.email === "k@gmail.com" ? (
+              <Admin />
+            ) : (
+              navigate("/") || null
+            )
+          }
+        />
       </Routes>
     </div>
   );

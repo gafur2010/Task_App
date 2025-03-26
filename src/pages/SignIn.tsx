@@ -1,18 +1,12 @@
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { ref, get } from "firebase/database";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { auth, database } from "../tools/firebase.config";
 import { useNavigate } from "react-router-dom";
 
 const SignIn = () => {
   const [user, setUser] = useState({ email: "", password: "" });
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (localStorage.getItem("user")) {
-      navigate("/");
-    }
-  }, [navigate]);
 
   async function loginUser() {
     if (!user.email || !user.password) {
@@ -26,32 +20,29 @@ const SignIn = () => {
         user.email,
         user.password
       );
-      console.log("Firebase auth response:", res);
 
       const userId = res.user.uid;
-      console.log("User ID:", userId);
-
       const userRef = ref(database, `users/${userId}`);
       const snapshot = await get(userRef);
 
       let userData = {};
       if (snapshot.exists()) {
         userData = snapshot.val();
-        console.log("User data from DB:", userData);
       }
 
-      localStorage.setItem("user", user.email);
-
+      localStorage.setItem(
+        "user",
+        JSON.stringify({ ...res.user, ...userData })
+      );
       setUser({ email: "", password: "" });
 
-      if (user.email === "k@gmail.com") {
+      if (userData.role === "admin") {
         navigate("/admin");
       } else {
         navigate("/");
       }
     } catch (error) {
-      console.error("Login error:", error);
-      alert("Login xatosi: email yoki parol noto‘g‘ri!");
+      alert("Kirishda xatolik: " + error.message);
     }
   }
 
@@ -73,10 +64,7 @@ const SignIn = () => {
           type="password"
           className="form-control m-2 w-auto"
         />
-        <a
-          className="link-info mx-auto mb-2"
-          href="http://localhost:5173/sign-up"
-        >
+        <a className="link-info mx-auto mb-2" href="/sign-up">
           Don't have an account?
         </a>
         <button
