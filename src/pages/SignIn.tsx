@@ -71,6 +71,9 @@ const SignIn = ({
         type="password"
         className="form-control m-2 w-auto"
       />
+      <a className="link-info mx-auto mb-2" href="/sign-up">
+        Do you have an account?
+      </a>
       <button onClick={loginUser} className="btn btn-primary mb-2 w-50 mx-auto">
         SIGN IN
       </button>
