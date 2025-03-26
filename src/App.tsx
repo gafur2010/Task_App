@@ -60,7 +60,6 @@ const App = () => {
   const [user, setUser] = useState<{ email: string; role?: string } | null>(
     null
   );
-  const navigate = useNavigate();
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
