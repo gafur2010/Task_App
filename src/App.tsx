@@ -57,7 +57,7 @@ const Navbar = ({
 };
 
 const App = () => {
-  const [user, setUser] = useState<{ email: string; role?: string } | null>(
+  const [user, setUser] = useState<{ email: string; role: string } | null>(
     null
   );
 
@@ -72,7 +72,7 @@ const App = () => {
     <div>
       <Navbar user={user} setUser={setUser} />
       <Routes>
-        <Route path="/sign-in" element={<SignIn />} />
+        <Route path="/sign-in" element={<SignIn setUser={setUser} />} />
         <Route path="/sign-up" element={<SignUp />} />
         <Route
           path="/"
@@ -80,9 +80,7 @@ const App = () => {
         />
         <Route
           path="/admin"
-          element={
-            user?.email === "k@gmail.com" ? <Admin /> : <Navigate to="/" />
-          }
+          element={user?.role === "admin" ? <Admin /> : <Navigate to="/" />}
         />
       </Routes>
     </div>

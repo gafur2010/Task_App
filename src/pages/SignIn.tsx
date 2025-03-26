@@ -1,15 +1,24 @@
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { ref, get } from "firebase/database";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { auth, database } from "../tools/firebase.config";
 import { useNavigate } from "react-router-dom";
 
-const SignIn = () => {
-  const [user, setUser] = useState<{ email: string; password: string }>({
-    email: "",
-    password: "",
-  });
+const SignIn = ({
+  setUser,
+}: {
+  setUser: React.Dispatch<
+    React.SetStateAction<{ email: string; role: string } | null>
+  >;
+}) => {
+  const [user, setLocalUser] = useState({ email: "", password: "" });
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (localStorage.getItem("user")) {
+      navigate("/");
+    }
+  }, [navigate]);
 
   async function loginUser() {
     if (!user.email || !user.password) {
@@ -23,28 +32,29 @@ const SignIn = () => {
         user.email,
         user.password
       );
-
       const userId = res.user.uid;
       const userRef = ref(database, `users/${userId}`);
       const snapshot = await get(userRef);
 
-      let userData: { role?: string } = {};
+      let role = "user"; // Default rol
+      if (user.email === "k@gmail.com") {
+        role = "admin";
+      }
+
+      let userData = { email: user.email, role };
       if (snapshot.exists()) {
-        userData = snapshot.val();
+        userData = { ...userData, ...snapshot.val() };
       }
 
-      localStorage.setItem(
-        "user",
-        JSON.stringify({ email: user.email, role: userData.role || "user" })
-      );
+      localStorage.setItem("user", JSON.stringify(userData));
+      setUser(userData);
 
-      if (userData.role === "admin") {
-        navigate("/admin");
-      } else {
-        navigate("/");
-      }
+      setLocalUser({ email: "", password: "" });
+
+      navigate("/");
     } catch (error) {
-      alert("Kirishda xatolik: " + (error as Error).message);
+      console.error("Login error:", error);
+      alert("Login xato! Iltimos, qayta urinib ko'ring.");
     }
   }
 
@@ -55,14 +65,14 @@ const SignIn = () => {
         <input
           placeholder="Type email..."
           value={user.email}
-          onChange={(e) => setUser({ ...user, email: e.target.value })}
+          onChange={(e) => setLocalUser({ ...user, email: e.target.value })}
           type="email"
           className="form-control m-2 w-auto"
         />
         <input
           placeholder="Type password..."
           value={user.password}
-          onChange={(e) => setUser({ ...user, password: e.target.value })}
+          onChange={(e) => setLocalUser({ ...user, password: e.target.value })}
           type="password"
           className="form-control m-2 w-auto"
         />
