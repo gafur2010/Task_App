@@ -1,17 +1,12 @@
 import { useState, useEffect } from "react";
-import { Route, Routes, Link, useNavigate } from "react-router-dom";
+import { Route, Routes, Link, useNavigate, Navigate } from "react-router-dom";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import Home from "./pages/Home";
 import Admin from "./pages/Admin";
 
-const Navbar = () => {
+const Navbar = ({ user, setUser }: { user: string | null; setUser: any }) => {
   const navigate = useNavigate();
-  const [user, setUser] = useState(localStorage.getItem("user"));
-
-  useEffect(() => {
-    setUser(localStorage.getItem("user"));
-  }, []);
 
   const handleSignOut = () => {
     localStorage.removeItem("user");
@@ -53,6 +48,13 @@ const Navbar = () => {
   );
 };
 
+const ProtectedAdmin = ({ user }: { user: string | null }) => {
+  if (user !== "k@gmail.com") {
+    return <Navigate to="/" replace />;
+  }
+  return <Admin />;
+};
+
 const App = () => {
   const [user, setUser] = useState(localStorage.getItem("user"));
 
@@ -62,12 +64,12 @@ const App = () => {
 
   return (
     <div>
-      <Navbar />
+      <Navbar user={user} setUser={setUser} />
       <Routes>
         <Route path="/sign-in" element={<SignIn />} />
         <Route path="/sign-up" element={<SignUp />} />
         <Route path="/" element={<Home />} />
-        <Route path="/admin" element={<Admin />} />
+        <Route path="/admin" element={<ProtectedAdmin user={user} />} />
       </Routes>
     </div>
   );

@@ -20,33 +20,38 @@ const SignIn = () => {
       return;
     }
 
-    const res = await signInWithEmailAndPassword(
-      auth,
-      user.email,
-      user.password
-    );
-    console.log("Firebase auth response:", res);
+    try {
+      const res = await signInWithEmailAndPassword(
+        auth,
+        user.email,
+        user.password
+      );
+      console.log("Firebase auth response:", res);
 
-    const userId = res.user.uid;
-    console.log("User ID:", userId);
+      const userId = res.user.uid;
+      console.log("User ID:", userId);
 
-    const userRef = ref(database, `users/${userId}`);
-    const snapshot = await get(userRef);
+      const userRef = ref(database, `users/${userId}`);
+      const snapshot = await get(userRef);
 
-    let userData = {};
-    if (snapshot.exists()) {
-      userData = snapshot.val();
-      console.log("User data from DB:", userData);
-    }
+      let userData = {};
+      if (snapshot.exists()) {
+        userData = snapshot.val();
+        console.log("User data from DB:", userData);
+      }
 
-    localStorage.setItem("user", JSON.stringify({ ...res.user, ...userData }));
+      localStorage.setItem("user", user.email);
 
-    setUser({ email: "", password: "" });
+      setUser({ email: "", password: "" });
 
-    if (user.email === "k@gmail.com") {
-      navigate("/admin");
-    } else {
-      navigate("/");
+      if (user.email === "k@gmail.com") {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      alert("Login xatosi: email yoki parol noto‘g‘ri!");
     }
   }
 
