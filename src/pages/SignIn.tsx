@@ -5,7 +5,10 @@ import { auth, database } from "../tools/firebase.config";
 import { useNavigate } from "react-router-dom";
 
 const SignIn = () => {
-  const [user, setUser] = useState({ email: "", password: "" });
+  const [user, setUser] = useState<{ email: string; password: string }>({
+    email: "",
+    password: "",
+  });
   const navigate = useNavigate();
 
   async function loginUser() {
@@ -25,16 +28,15 @@ const SignIn = () => {
       const userRef = ref(database, `users/${userId}`);
       const snapshot = await get(userRef);
 
-      let userData = {};
+      let userData: { role?: string } = {};
       if (snapshot.exists()) {
         userData = snapshot.val();
       }
 
       localStorage.setItem(
         "user",
-        JSON.stringify({ ...res.user, ...userData })
+        JSON.stringify({ email: user.email, role: userData.role || "user" })
       );
-      setUser({ email: "", password: "" });
 
       if (userData.role === "admin") {
         navigate("/admin");
@@ -42,7 +44,7 @@ const SignIn = () => {
         navigate("/");
       }
     } catch (error) {
-      alert("Kirishda xatolik: " + error.message);
+      alert("Kirishda xatolik: " + (error as Error).message);
     }
   }
 

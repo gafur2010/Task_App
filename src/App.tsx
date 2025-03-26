@@ -1,11 +1,19 @@
 import { useEffect, useState } from "react";
-import { Route, Routes, Link, useNavigate } from "react-router-dom";
+import { Route, Routes, Link, useNavigate, Navigate } from "react-router-dom";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import Home from "./pages/Home";
 import Admin from "./pages/Admin";
 
-const Navbar = ({ user, setUser }) => {
+const Navbar = ({
+  user,
+  setUser,
+}: {
+  user: { email: string; role?: string } | null;
+  setUser: React.Dispatch<
+    React.SetStateAction<{ email: string; role?: string } | null>
+  >;
+}) => {
   const navigate = useNavigate();
 
   const handleSignOut = () => {
@@ -49,7 +57,9 @@ const Navbar = ({ user, setUser }) => {
 };
 
 const App = () => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<{ email: string; role?: string } | null>(
+    null
+  );
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -67,16 +77,12 @@ const App = () => {
         <Route path="/sign-up" element={<SignUp />} />
         <Route
           path="/"
-          element={user ? <Home /> : navigate("/sign-in") || null}
+          element={user ? <Home /> : <Navigate to="/sign-in" />}
         />
         <Route
           path="/admin"
           element={
-            user && user.email === "k@gmail.com" ? (
-              <Admin />
-            ) : (
-              navigate("/") || null
-            )
+            user?.email === "k@gmail.com" ? <Admin /> : <Navigate to="/" />
           }
         />
       </Routes>
