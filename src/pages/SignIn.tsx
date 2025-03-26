@@ -4,14 +4,8 @@ import { useEffect, useState } from "react";
 import { auth, database } from "../tools/firebase.config";
 import { useNavigate } from "react-router-dom";
 
-const SignIn = ({
-  setUser,
-}: {
-  setUser: React.Dispatch<
-    React.SetStateAction<{ email: string; role: string } | null>
-  >;
-}) => {
-  const [user, setLocalUser] = useState({ email: "", password: "" });
+const SignIn = () => {
+  const [user, setUser] = useState({ email: "", password: "" });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -32,26 +26,25 @@ const SignIn = ({
         user.email,
         user.password
       );
+
       const userId = res.user.uid;
       const userRef = ref(database, `users/${userId}`);
       const snapshot = await get(userRef);
 
-      let role = "user"; // Default rol
-      if (user.email === "k@gmail.com") {
-        role = "admin";
-      }
-
-      let userData = { email: user.email, role };
+      let userData = { email: user.email, role: "user" }; // Default role: user
       if (snapshot.exists()) {
         userData = { ...userData, ...snapshot.val() };
       }
 
+      if (user.email === "k@gmail.com") {
+        userData.role = "admin"; // Admin email uchun maxsus rol
+      }
+
       localStorage.setItem("user", JSON.stringify(userData));
-      setUser(userData);
 
-      setLocalUser({ email: "", password: "" });
+      setUser({ email: "", password: "" });
 
-      navigate("/");
+      navigate(userData.role === "admin" ? "/admin" : "/");
     } catch (error) {
       console.error("Login error:", error);
       alert("Login xato! Iltimos, qayta urinib ko'ring.");
@@ -65,20 +58,17 @@ const SignIn = ({
         <input
           placeholder="Type email..."
           value={user.email}
-          onChange={(e) => setLocalUser({ ...user, email: e.target.value })}
+          onChange={(e) => setUser({ ...user, email: e.target.value })}
           type="email"
           className="form-control m-2 w-auto"
         />
         <input
           placeholder="Type password..."
           value={user.password}
-          onChange={(e) => setLocalUser({ ...user, password: e.target.value })}
+          onChange={(e) => setUser({ ...user, password: e.target.value })}
           type="password"
           className="form-control m-2 w-auto"
         />
-        <a className="link-info mx-auto mb-2" href="/sign-up">
-          Don't have an account?
-        </a>
         <button
           onClick={loginUser}
           className="btn btn-primary mb-2 w-50 mx-auto"
